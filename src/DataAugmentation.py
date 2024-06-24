@@ -68,6 +68,11 @@ class DataAugmentation:
         image = image / 255.0  # normalize to [0,1]
         return image, label
 
+    def __create_augmented_dir(self, augmentation_type: str):
+        dir = f"{self.augmented_dir}/{augmentation_type}"
+        if not os.path.exists(dir):
+            os.makedirs(dir)
+
     def create_tf_datasets(self):
         self.__train_ds = tf.data.Dataset.from_tensor_slices((self.__train_paths, self.__train_labels))
         self.__train_ds = self.__train_ds.map(
@@ -90,6 +95,9 @@ class DataAugmentation:
         self.__test_ds = self.__test_ds.batch(self.batch_size).prefetch(buffer_size=self.autotune)
 
     def __save_augmented_img(self, augmented_img, img_label: str, augmentation_type: str):
+        # create dir for the augmented images if not exists
+        self.__create_augmented_dir(augmentation_type=augmentation_type)
+
         # convert TensorFlow tensor to numpy array and reshape
         augmented_img_numpy = augmented_img.numpy()
         augmented_img_numpy = augmented_img_numpy.reshape(
@@ -103,7 +111,7 @@ class DataAugmentation:
         pil_image = Image.fromarray(augmented_img_numpy)
 
         # save the image locally
-        save_path = f"{self.augmented_dir}/{img_label}_{augmentation_type}.jpg"
+        save_path = f"{self.augmented_dir}/{augmentation_type}/{img_label}_{augmentation_type}.jpg"
         pil_image.save(save_path)
 
     def grayscale_images(self):
@@ -117,3 +125,6 @@ class DataAugmentation:
                 img_label=label,
                 augmentation_type="grayscale"
             )
+
+    def saturate_images(self):
+        images, labels = next(iter(self.__train_ds))
