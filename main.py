@@ -10,3 +10,7 @@ if __name__ == "__main__":
     data_augmentation.get_all_images_paths_and_labels()
     data_augmentation.create_tf_datasets()
     data_augmentation.grayscale_images()
+    # data_augmentation.saturate_images()
+    # data_augmentation.bright_images()
+    # data_augmentation.center_crop_images()
+    data_augmentation.flip_images()

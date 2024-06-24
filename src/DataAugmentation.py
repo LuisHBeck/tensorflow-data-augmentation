@@ -35,8 +35,8 @@ class DataAugmentation:
     def __post_init__(self):
         self.batch_size = 8
         self.autotune = tf.data.AUTOTUNE
-        self.img_height = 180
-        self.img_width = 180
+        self.img_height = 1080
+        self.img_width = 1920
 
     def get_all_images_paths_and_labels(self):
         # list all image file paths
@@ -100,9 +100,18 @@ class DataAugmentation:
 
         # convert TensorFlow tensor to numpy array and reshape
         augmented_img_numpy = augmented_img.numpy()
-        augmented_img_numpy = augmented_img_numpy.reshape(
-            augmented_img_numpy.shape[0], augmented_img_numpy.shape[1]
-        )
+
+        # check if the image is grayscale or not
+        if augmented_img_numpy.ndim == 3 and augmented_img_numpy.shape[2] == 1:
+            # grayscale image
+            augmented_img_numpy = augmented_img_numpy.reshape(
+                augmented_img_numpy.shape[0], augmented_img_numpy.shape[1]
+            )
+        elif augmented_img_numpy.ndim == 3 and augmented_img_numpy.shape[2] == 3:
+            # color image, no need to reshape
+            pass
+        else:
+            raise ValueError(f"Unexpected image shape: {augmented_img_numpy.shape}")
 
         # convert to uint8 (required by PIL)
         augmented_img_numpy = (augmented_img_numpy * 255).astype('uint8')
@@ -128,3 +137,48 @@ class DataAugmentation:
 
     def saturate_images(self):
         images, labels = next(iter(self.__train_ds))
+        for i in range(len(images)):
+            image = images[i]
+            label = labels[i]
+            saturated_image = tf.image.adjust_saturation(image, 3)
+            self.__save_augmented_img(
+                augmented_img=saturated_image,
+                img_label=label,
+                augmentation_type="saturation"
+            )
+
+    def bright_images(self):
+        images, labels = next(iter(self.__train_ds))
+        for i in range(len(images)):
+            image = images[i]
+            label = labels[i]
+            bright_image = tf.image.adjust_brightness(image, 0.4)
+            self.__save_augmented_img(
+                augmented_img=bright_image,
+                img_label=label,
+                augmentation_type="bright"
+            )
+
+    def center_crop_images(self):
+        images, labels = next(iter(self.__train_ds))
+        for i in range(len(images)):
+            image = images[i]
+            label = labels[i]
+            center_cropped_image = tf.image.adjust_brightness(image, 0.4)
+            self.__save_augmented_img(
+                augmented_img=center_cropped_image,
+                img_label=label,
+                augmentation_type="center_crop"
+            )
+
+    def flip_images(self):
+        images, labels = next(iter(self.__train_ds))
+        for i in range(len(images)):
+            image = images[i]
+            label = labels[i]
+            flipped_image = tf.image.flip_left_right(image)
+            self.__save_augmented_img(
+                augmented_img=flipped_image,
+                img_label=label,
+                augmentation_type="flip"
+            )
